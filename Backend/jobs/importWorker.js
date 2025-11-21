@@ -1,0 +1,47 @@
+// backend/jobs/importWorker.js
+import { Worker } from 'bullmq'
+import IORedis from 'ioredis'
+import path from 'path'
+import fs from 'fs'
+import fetch from 'node-fetch'
+const connection = new IORedis(process.env.REDIS_URL || 'redis://127.0.0.1:6379')
+
+const pythonWorkerUrl = process.env.PYTHON_WORKER_URL || 'http://localhost:8000'
+
+const worker = new Worker('importQueue', async job => {
+  const { filepath, filename, ocr, mode } = job.data
+  const ext = (filename || '').split('.').pop().toLowerCase()
+  job.updateProgress(10)
+
+  if (ext === 'pptx') {
+    // send file to python worker for parsing
+    const body = new FormData()
+    const fileStream = fs.createReadStream(filepath)
+    body.append('file', fileStream, filename)
+    body.append('mode', mode)
+    const resp = await fetch(`${pythonWorkerUrl}/parse-pptx`, { method:'POST', body })
+    const json = await resp.json()
+    // json should contain slides[] with text + images (images as base64 or saved files)
+    job.updateProgress(80)
+    // Create notes from slides (stub)
+    const createdNotes = json.slides.map((s, idx) => `note-pptx-${Date.now()}-${idx}`)
+    job.updateProgress(100)
+    return { createdNotes }
+  } else if (ext === 'pdf') {
+    // stub: parse PDF with a simple extractor or poppler / pdf-lib (not implemented here)
+    // For now, just echo file name and pretend note created
+    job.updateProgress(80)
+    const createdNotes = [`note-pdf-${Date.now()}`]
+    job.updateProgress(100)
+    return { createdNotes }
+  } else {
+    throw new Error('Unsupported file type')
+  }
+}, { connection })
+
+worker.on('completed', job => {
+  console.log('Import job completed', job.id, job.returnvalue)
+})
+worker.on('failed', (job, err) => {
+  console.error('Import job failed', job.id, err)
+})
