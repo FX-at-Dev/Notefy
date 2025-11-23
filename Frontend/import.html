@@ -4,7 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Notefy - Web-Based Notes Making and Sharing Application</title>
-  <link rel="stylesheet" href="/Frontend/css/style.css" />
+  <link rel="stylesheet" href="./css/style.css" />
+  <script>
+    window.__API_BASE__ = window.__API_BASE__ || 'http://localhost:4000'
+  </script>
 </head>
 <body>
   <main class="centered">
@@ -23,7 +26,7 @@
 
         <div class="row">
           <button type="submit" class="btn">Start Import</button>
-          <a href="/editor.html" class="btn ghost">Back</a>
+          <a href="./editor.html" class="btn ghost">Back</a>
         </div>
       </form>
 
@@ -31,7 +34,7 @@
     </div>
   </main>
 
-  <script type="module" src="/js/import.js"></script>
+  <script type="module" src="./js/import.js"></script>
   <script type="module">
     // in import.html - when user clicks "Import into editor" or Confirm
 function sendToEditor(title, text) {

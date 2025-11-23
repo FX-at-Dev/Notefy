@@ -8,10 +8,14 @@ import IORedis from 'ioredis'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
+import { pipeline } from 'stream/promises'
 
 const fastify = Fastify({ logger: true })
 const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379'
-const connection = new IORedis(REDIS_URL)
+const connection = new IORedis(REDIS_URL, {
+  maxRetriesPerRequest: null,
+  enableReadyCheck: false
+})
 
 // simple in-memory user store for demo (replace with Postgres)
 const users = new Map()
@@ -49,7 +53,7 @@ fastify.get('/api/notes', async (req, reply) => {
 
 // import endpoint: accepts multipart file, enqueues job
 fastify.post('/api/import', async (req, reply) => {
-  const parts = await req.parts()
+  const parts = req.parts()
   let filePart = null
   const formData = {}
   for await (const part of parts) {
@@ -65,22 +69,29 @@ fastify.post('/api/import', async (req, reply) => {
 
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'notes-import-'))
   const filename = path.join(tmpDir, filePart.filename || 'upload.bin')
-  const writeStream = fs.createWriteStream(filename)
-  await new Promise((res, rej) => {
-    filePart.file.pipe(writeStream)
-    filePart.file.on('end', res)
-    filePart.file.on('error', rej)
-  })
+  fastify.log.info({ upload: filePart.filename, ocr: formData['ocr'], mode: formData['mode'] }, 'import upload received')
+  try {
+    await pipeline(filePart.file, fs.createWriteStream(filename))
+    fastify.log.info({ upload: filePart.filename, target: filename }, 'import file persisted')
+  } catch (err) {
+    fastify.log.error({ err }, 'import file write failed')
+    return reply.code(500).send({ error: 'failed to save upload' })
+  }
 
   // Enqueue job: send file path & options
-  const job = await importQueue.add('import-file', {
-    filepath: filename,
-    filename: filePart.filename,
-    ocr: formData['ocr'] === '1' || formData['ocr'] === 'true',
-    mode: formData['mode'] || 'single'
-  })
-
-  return reply.code(202).send({ jobId: job.id, status: 'queued' })
+  try {
+    const job = await importQueue.add('import-file', {
+      filepath: filename,
+      filename: filePart.filename,
+      ocr: formData['ocr'] === '1' || formData['ocr'] === 'true',
+      mode: formData['mode'] || 'single'
+    })
+    fastify.log.info({ jobId: job.id }, 'import job enqueued')
+    return reply.code(202).send({ jobId: job.id, status: 'queued' })
+  } catch (err) {
+    fastify.log.error({ err }, 'failed to enqueue import job')
+    return reply.code(500).send({ error: 'failed to queue job' })
+  }
 })
 
 fastify.get('/api/import/:jobId/status', async (req, reply) => {
