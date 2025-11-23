@@ -7,6 +7,9 @@
   <link rel="stylesheet" href="./css/style.css" />
   <!-- CodeMirror theme (via CDN) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@codemirror/theme-one-dark@6.0.0/theme-one-dark.css" />
+  <script>
+    window.__API_BASE__ = window.__API_BASE__ || 'http://localhost:4000'
+  </script>
   <style>
     .cm-editor { height:100%; min-height:320px; }
     .draw-canvas { width:800px; height:500px; background:#fff; border-radius:8px; }
@@ -134,23 +137,42 @@ const md = new window.markdownit()
   // Try to initialize CodeMirror-rich editor
   (async function tryInitRichEditor(){
     try {
-      // dynamic imports for CodeMirror modules
-      const [{ EditorView, basicSetup }, { EditorState }, { markdown }, { oneDark }] = await Promise.all([
-        import('https://esm.sh/@codemirror/basic-setup@0.19.1'),
-        import('https://esm.sh/@codemirror/state@0.19.1'),
-        import('https://esm.sh/@codemirror/lang-markdown@0.19.2'),
-        import('https://esm.sh/@codemirror/theme-one-dark@6.0.0')
-      ].map(p => p));
+      // dynamic imports for CodeMirror modules (normalize various module shapes)
+      const stateUrl = 'https://esm.sh/@codemirror/state@6.4.1?target=es2020'
+      const viewUrl = 'https://esm.sh/@codemirror/view@6.23.0?target=es2020&deps=@codemirror/state@6.4.1'
+      const markdownUrl = 'https://esm.sh/@codemirror/lang-markdown@6.2.3?target=es2020&deps=@codemirror/state@6.4.1,@codemirror/view@6.23.0'
+      const basicSetupUrl = 'https://esm.sh/@codemirror/basic-setup@0.20.0?target=es2020&deps=@codemirror/state@6.4.1,@codemirror/view@6.23.0'
+      const themeUrl = 'https://esm.sh/@codemirror/theme-one-dark@6.0.0?target=es2020&deps=@codemirror/state@6.4.1,@codemirror/view@6.23.0'
 
-      // Note: some esm.sh returns module shape differently; normalize:
-      const BasicSetup = EditorView && EditorView.basicSetup ? EditorView.basicSetup : basicSetup.basicSetup || basicSetup
-      // create editor state and view
-      const startState = EditorState.EditorState.create ? EditorState.EditorState.create({
+      const [stateMod, viewMod, markdownMod, basicSetupMod, themeMod] = await Promise.all([
+        import(stateUrl),
+        import(viewUrl),
+        import(markdownUrl),
+        import(basicSetupUrl),
+        import(themeUrl)
+      ])
+
+      const EditorState = stateMod.EditorState || stateMod.default?.EditorState || stateMod.default
+      const EditorView = viewMod.EditorView || viewMod.default?.EditorView || viewMod.default
+      const markdownExtensionFactory = markdownMod.markdown || markdownMod.default
+      const basicSetupExport = basicSetupMod.basicSetup || basicSetupMod.default
+      const oneDark = themeMod.oneDark || themeMod.default
+
+      if (!EditorView || !EditorState || !markdownExtensionFactory || !basicSetupExport) {
+        throw new Error('CodeMirror modules failed to load expected exports')
+      }
+
+      const resolvedBasicSetup = typeof basicSetupExport === 'function' ? basicSetupExport() : basicSetupExport
+      const extensions = []
+      if (Array.isArray(resolvedBasicSetup)) extensions.push(...resolvedBasicSetup)
+      else if (resolvedBasicSetup) extensions.push(resolvedBasicSetup)
+      const mdExtension = typeof markdownExtensionFactory === 'function' ? markdownExtensionFactory() : markdownExtensionFactory
+      if (mdExtension) extensions.push(mdExtension)
+      if (oneDark) extensions.push(oneDark)
+
+      const startState = EditorState.create({
         doc: '',
-        extensions: [BasicSetup, markdown.markdown(), oneDark.oneDark]
-      }) : EditorState.create({
-        doc: '',
-        extensions: [basicSetup, markdown(), oneDark]
+        extensions
       })
 
       const cmRoot = document.getElementById('cm-root')
@@ -159,7 +181,8 @@ const md = new window.markdownit()
       const ta = document.getElementById('editor-fallback')
       try { if (ta) ta.style.display = 'none' } catch(e){}
 
-      cmView = new EditorView.EditorView ? new EditorView.EditorView({ state: startState, parent: cmRoot }) : new EditorView({ state: startState, parent: cmRoot })
+      cmView = new EditorView({ state: startState, parent: cmRoot })
+      window.cmView = cmView // expose for helpers that need to reach the active CodeMirror view
 
       // hook into dispatch to detect changes
       const originalDispatch = cmView.dispatch.bind(cmView)
@@ -370,14 +393,14 @@ const md = new window.markdownit()
   // Helper: get editor content and set editor content (works for CodeMirror or fallback)
   function getEditorContent() {
     const ta = document.getElementById('editor-fallback');
-    if (window.cmView && cmView.state) {
+    if (cmView && cmView.state) {
       return cmView.state.doc.toString();
     }
     return ta ? ta.value : '';
   }
   async function setEditorContent(text) {
     const ta = document.getElementById('editor-fallback');
-    if (window.cmView && cmView.dispatch) {
+    if (cmView && cmView.dispatch) {
       cmView.dispatch({ changes: { from: 0, to: cmView.state.doc.length, insert: text || '' } });
     } else if (ta) {
       ta.value = text || '';
@@ -612,7 +635,8 @@ const md = new window.markdownit()
     if (modal) {
       modal.classList.add('hidden');
       modal.setAttribute('aria-hidden', 'true');
-      iframe.src = window.location.origin + '/import.html';
+      const iframe = document.getElementById('import-iframe');
+      if (iframe) iframe.src = 'about:blank';
     }
   });
 
