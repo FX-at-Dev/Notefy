@@ -19,6 +19,7 @@ export async function apiFetch(path, opts = {}) {
   const headers = opts.headers || {}
   const token = localStorage.getItem('auth_token')
   if (token) headers['Authorization'] = `Bearer ${token}`
+  const fetchOptions = { ...opts, headers }
   if (fetchOptions.body instanceof FormData) {
     // Allow browser to set boundaries automatically by deleting headers it cannot calculate
     if (fetchOptions.headers && fetchOptions.headers['Content-Type']) {

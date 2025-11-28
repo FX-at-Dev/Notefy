@@ -6,6 +6,17 @@
   <title>Notefy - Web-Based Notes Making and Sharing Application</title>
   <link rel="stylesheet" href="./css/style.css" />
   <script>
+  (function(){
+      if (!window.fetchOptions) {
+        window.fetchOptions = {};
+        console.log('[fix] fetchOptions fallback defined at', new Date().toISOString());
+      } else {
+        console.log('[fix] fetchOptions already present');
+      }
+    })();
+</script>
+
+  <script>
     window.__API_BASE__ = window.__API_BASE__ || 'http://localhost:4000'
   </script>
 </head>
