@@ -54,7 +54,8 @@ fastify.get('/api/notes', async (req, reply) => {
 fastify.post('/api/import', async (req, reply) => {
   fastify.log.info('POST /api/import - starting multipart parse')
   
-  let filePart = null
+  let savedFilePath = null
+  let savedFilename = null
   const formData = {}
   
   try {
@@ -62,7 +63,16 @@ fastify.post('/api/import', async (req, reply) => {
     for await (const part of parts) {
       if (part.file) {
         fastify.log.info({ filename: part.filename, mimetype: part.mimetype }, 'file part received')
-        filePart = part
+        const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'notes-import-'))
+        const filename = path.join(tmpDir, part.filename || 'upload.bin')
+        
+        // Buffer and write immediately to avoid stream loss
+        const buffer = await part.toBuffer()
+        fs.writeFileSync(filename, buffer)
+        
+        savedFilePath = filename
+        savedFilename = part.filename
+        fastify.log.info({ path: filename, size: buffer.length }, 'file written successfully')
       } else {
         formData[part.fieldname] = part.value
         fastify.log.info({ field: part.fieldname, value: part.value }, 'form field received')
@@ -73,30 +83,16 @@ fastify.post('/api/import', async (req, reply) => {
     return reply.code(400).send({ error: 'multipart parse error: ' + parseErr.message })
   }
 
-  if (!filePart) {
+  if (!savedFilePath) {
     fastify.log.warn('no file part found in upload')
     return reply.code(400).send({ error: 'no file' })
-  }
-
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'notes-import-'))
-  const filename = path.join(tmpDir, filePart.filename || 'upload.bin')
-  
-  try {
-    fastify.log.info({ target: filename }, 'buffering file data')
-    const buffer = await filePart.toBuffer()
-    fastify.log.info({ size: buffer.length }, 'file buffered, writing to disk')
-    fs.writeFileSync(filename, buffer)
-    fastify.log.info({ path: filename, size: buffer.length }, 'file written successfully')
-  } catch (err) {
-    fastify.log.error({ err }, 'file write failed')
-    return reply.code(500).send({ error: 'failed to save upload' })
   }
 
   try {
     fastify.log.info('enqueueing import job')
     const job = await importQueue.add('import-file', {
-      filepath: filename,
-      filename: filePart.filename,
+      filepath: savedFilePath,
+      filename: savedFilename,
       ocr: formData['ocr'] === '1' || formData['ocr'] === 'true',
       mode: formData['mode'] || 'single'
     })

@@ -58,11 +58,23 @@ const worker = new Worker('importQueue', async job => {
     const createdNotes = notes.map((_, idx) => `note-pptx-${Date.now()}-${idx}`)
     return { createdNotes, notes }
   } else if (ext === 'pdf') {
-    // stub: parse PDF with a simple extractor or poppler / pdf-lib (not implemented here)
-    // For now, just echo file name and pretend note created
+    // Send to python worker for PDF text extraction
+    const body = new FormData()
+    const fileStream = fs.createReadStream(filepath)
+    body.append('file', fileStream, filename)
+    
+    const resp = await fetch(`${pythonWorkerUrl}/parse-pdf`, { method:'POST', body })
+    if (!resp.ok) throw new Error(`Python worker failed: ${resp.statusText}`)
+    
+    const json = await resp.json()
     job.updateProgress(80)
+    
     const createdNotes = [`note-pdf-${Date.now()}`]
-    const notes = [{ title: filename || 'Imported PDF', body: `Imported PDF "${filename}". OCR requested: ${ocr ? 'yes' : 'no'}.` }]
+    const notes = [{ 
+      title: filename || 'Imported PDF', 
+      body: json.text || `(No text extracted from ${filename})` 
+    }]
+    
     job.updateProgress(100)
     return { createdNotes, notes }
   } else {

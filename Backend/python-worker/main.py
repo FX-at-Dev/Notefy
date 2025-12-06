@@ -1,11 +1,26 @@
 # backend/python-worker/main.py
 from fastapi import FastAPI, File, UploadFile, Form
 from pptx import Presentation
+from pypdf import PdfReader
 from fastapi.responses import JSONResponse
 import tempfile
 import base64
+import io
 
 app = FastAPI()
+
+@app.post("/parse-pdf")
+async def parse_pdf(file: UploadFile = File(...)):
+    contents = await file.read()
+    pdf_file = io.BytesIO(contents)
+    reader = PdfReader(pdf_file)
+    text = ""
+    for page in reader.pages:
+        extracted = page.extract_text()
+        if extracted:
+            text += extracted + "\n\n"
+    
+    return JSONResponse({"text": text})
 
 @app.post("/parse-pptx")
 async def parse_pptx(file: UploadFile = File(...), mode: str = Form('slides')):
