@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # Node.js Backend (serves Frontend too)
+  backend:
+    build:
+      context: .
+      dockerfile: Backend/Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - REDIS_URL=redis://redis:6379
+      - PYTHON_WORKER_URL=http://python-worker:8000
+      - JWT_SECRET=production-secret-change-me
+    depends_on:
+      - redis
+      - python-worker
+
+  # Python Worker (OCR, PPTX)
+  python-worker:
+    build:
+      context: ./Backend/python-worker
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+
+  # Redis for Queues
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"

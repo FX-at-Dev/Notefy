@@ -3,11 +3,16 @@ import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import multipart from '@fastify/multipart'
 import jwt from '@fastify/jwt'
+import fastifyStatic from '@fastify/static'
 import { Queue } from 'bullmq'
 import IORedis from 'ioredis'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const fastify = Fastify({ logger: true })
 const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379'
@@ -23,6 +28,12 @@ users.set('demo@local', { id: 'u1', email: 'demo@local', password: 'demo123' })
 fastify.register(cors, { origin: true })
 fastify.register(multipart)
 fastify.register(jwt, { secret: process.env.JWT_SECRET || 'dev-secret' })
+
+// Serve static frontend files
+fastify.register(fastifyStatic, {
+  root: path.join(__dirname, '../Frontend'),
+  prefix: '/',
+})
 
 // BullMQ queue
 const importQueue = new Queue('importQueue', { connection })
@@ -119,8 +130,9 @@ fastify.get('/api/import/:jobId/status', async (req, reply) => {
 
 const start = async () => {
   try {
-    await fastify.listen({ port: 4000, host: '0.0.0.0' })
-    fastify.log.info('Server listening on port 4000')
+    const port = process.env.PORT || 4000
+    await fastify.listen({ port, host: '0.0.0.0' })
+    fastify.log.info(`Server listening on port ${port}`)
   } catch (err) {
     fastify.log.error(err)
     process.exit(1)
