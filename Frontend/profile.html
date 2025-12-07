@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Notefy - Profile</title>
+  <link rel="stylesheet" href="./css/style.css" />
+  <style>
+    .settings-container {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .settings-section {
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+      backdrop-filter: blur(20px);
+    }
+    .settings-header {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text-main);
+      border-bottom: 1px solid var(--glass-border);
+      padding-bottom: 12px;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-size: 14px;
+    }
+    .form-input:focus {
+      border-color: var(--accent-primary);
+    }
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: bold;
+      color: white;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      background-size: cover;
+      background-position: center;
+    }
+    .profile-avatar:hover::after {
+      content: '📷';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    .btn-danger {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      background: #ff6b6b;
+      color: #fff;
+      cursor: pointer;
+      font-size: 13px;
+      margin: 12px 0;
+      transition: background 0.2s;
+    }
+    .btn-danger:hover {
+      background: #fa5252;
+    }
+    
+    #avatar-input { display: none; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="left">
+      <button id="btn-back" class="icon-btn">← Back</button>
+    </div>
+    <div class="center">Profile</div>
+    <div class="right">
+      <button id="btn-logout" class="icon-btn" style="color:#ff6b6b;border-color:rgba(255,107,107,0.3)">Logout</button>
+    </div>
+  </header>
+
+  <div class="settings-container">
+    <div class="settings-section" style="text-align:center;display:flex;flex-direction:column;align-items:center">
+      <div class="profile-avatar" id="avatar-display">D</div>
+      <input type="file" id="avatar-input" accept="image/*" />
+      
+      <button id="btn-remove-avatar" class="btn-danger" style="display:none">Remove Photo</button>
+
+      <h2 style="margin:0;font-size:20px">Demo User</h2>
+      <p style="margin:4px 0 0;color:var(--text-muted);font-size:14px">demo@local</p>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-header">Edit Profile</div>
+      
+      <div class="form-group">
+        <label class="form-label">Display Name</label>
+        <input type="text" class="form-input" id="input-name" value="Demo User" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="form-input" id="input-email" value="demo@local" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Bio</label>
+        <textarea class="form-input" id="input-bio" rows="3" placeholder="Tell us about yourself..." maxlength="300" style="resize:none"></textarea>
+        <div style="text-align:right;font-size:12px;color:var(--text-muted);margin-top:4px"><span id="bio-count">0</span>/300</div>
+      </div>
+
+      <div style="text-align:right;margin-top:20px">
+        <button id="btn-save" class="btn">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('btn-back').addEventListener('click', () => {
+      window.location.href = 'editor.html'
+    })
+
+    document.getElementById('btn-logout').addEventListener('click', () => {
+      if(confirm('Are you sure you want to logout?')) {
+        window.location.href = 'index.html'
+      }
+    })
+
+    // Load profile data
+    const storedName = localStorage.getItem('profile_name') || 'Demo User'
+    const storedEmail = localStorage.getItem('profile_email') || 'demo@local'
+    const storedBio = localStorage.getItem('profile_bio') || ''
+    const storedAvatar = localStorage.getItem('profile_avatar')
+
+    document.getElementById('input-name').value = storedName
+    document.getElementById('input-email').value = storedEmail
+    document.getElementById('input-bio').value = storedBio
+    document.getElementById('bio-count').textContent = storedBio.length
+
+    document.getElementById('input-bio').addEventListener('input', (e) => {
+        document.getElementById('bio-count').textContent = e.target.value.length
+    })
+    
+    // Update UI
+    const avatarEl = document.getElementById('avatar-display')
+    const removeAvatarBtn = document.getElementById('btn-remove-avatar')
+    const nameEl = document.querySelector('h2')
+    const emailEl = document.querySelector('p')
+    
+    nameEl.textContent = storedName
+    emailEl.textContent = storedEmail
+    
+    function updateAvatarUI(name, avatarData) {
+        if (avatarData) {
+            avatarEl.style.backgroundImage = `url(${avatarData})`
+            avatarEl.textContent = ''
+            removeAvatarBtn.style.display = 'block'
+        } else {
+            avatarEl.style.backgroundImage = ''
+            avatarEl.textContent = name.charAt(0).toUpperCase()
+            removeAvatarBtn.style.display = 'none'
+        }
+    }
+    
+    updateAvatarUI(storedName, storedAvatar)
+
+    // Avatar Upload Logic
+    function triggerUpload() {
+        document.getElementById('avatar-input').click()
+    }
+
+    avatarEl.addEventListener('click', triggerUpload)
+
+    removeAvatarBtn.addEventListener('click', () => {
+        if(confirm('Remove profile photo?')) {
+            localStorage.removeItem('profile_avatar')
+            updateAvatarUI(document.getElementById('input-name').value, null)
+        }
+    })
+    
+    document.getElementById('avatar-input').addEventListener('change', (e) => {
+        const file = e.target.files[0]
+        if (!file) return
+        
+        const reader = new FileReader()
+        reader.onload = (ev) => {
+            const dataUrl = ev.target.result
+            // Save immediately or wait for save button? 
+            // Let's save immediately for the avatar as it's a distinct action
+            localStorage.setItem('profile_avatar', dataUrl)
+            updateAvatarUI(document.getElementById('input-name').value, dataUrl)
+        }
+        reader.readAsDataURL(file)
+    })
+
+    document.getElementById('btn-save').addEventListener('click', () => {
+      const name = document.getElementById('input-name').value
+      const email = document.getElementById('input-email').value
+      const bio = document.getElementById('input-bio').value
+      
+      localStorage.setItem('profile_name', name)
+      localStorage.setItem('profile_email', email)
+      localStorage.setItem('profile_bio', bio)
+      
+      // Update UI immediately
+      nameEl.textContent = name
+      emailEl.textContent = email
+      
+      // If no custom avatar, update initials
+      if (!localStorage.getItem('profile_avatar')) {
+          updateAvatarUI(name, null)
+      }
+      
+      alert('Profile updated successfully!')
+    })
+  </script>
+</body>
+</html>

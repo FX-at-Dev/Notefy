@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Notefy - Settings</title>
+  <link rel="stylesheet" href="./css/style.css" />
+  <style>
+    .settings-container {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .settings-section {
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+      backdrop-filter: blur(20px);
+    }
+    .settings-header {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text-main);
+      border-bottom: 1px solid var(--glass-border);
+      padding-bottom: 12px;
+    }
+    .setting-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .setting-item:last-child { border-bottom: none; }
+    .setting-label {
+      font-size: 14px;
+      color: var(--text-main);
+    }
+    .setting-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(255,255,255,0.1);
+      transition: .4s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider { background-color: var(--accent-primary); }
+    input:checked + .slider:before { transform: translateX(20px); }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="left">
+      <button id="btn-back" class="icon-btn">← Back</button>
+    </div>
+    <div class="center">Settings</div>
+    <div class="right">
+      <button id="btn-logout" class="icon-btn" style="color:#ff6b6b;border-color:rgba(255,107,107,0.3)">Logout</button>
+    </div>
+  </header>
+
+  <div class="settings-container">
+    <div class="settings-section">
+      <div class="settings-header">Appearance</div>
+      
+      <div class="setting-item">
+        <div>
+          <div class="setting-label">Dark Mode</div>
+          <div class="setting-desc">Use dark theme for the application</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle-theme" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div>
+          <div class="setting-label">Show Button Tooltips</div>
+          <div class="setting-desc">Display labels when hovering over header buttons</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle-tooltips" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div>
+          <div class="setting-label">Show Button Tooltips</div>
+          <div class="setting-desc">Display labels when hovering over header buttons</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle-tooltips" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-header">Data Management</div>
+      
+      <div class="setting-item">
+        <div>
+          <div class="setting-label">Export All Data</div>
+          <div class="setting-desc">Download a backup of all your notes</div>
+        </div>
+        <button id="btn-export-all" class="btn ghost">Export JSON</button>
+      </div>
+
+      <div class="setting-item">
+        <div>
+          <div class="setting-label" style="color:#ff6b6b">Delete All Data</div>
+          <div class="setting-desc">Permanently remove all notes and settings</div>
+        </div>
+        <button id="btn-delete-all" class="btn" style="background:rgba(255,107,107,0.2);color:#ff6b6b;border:1px solid rgba(255,107,107,0.3)">Clear Data</button>
+      </div>
+    </div>
+    
+    <div class="settings-section">
+      <div class="settings-header">About</div>
+      <div style="font-size:13px;color:var(--text-muted);line-height:1.6">
+        <p>Notefy v0.1.0</p>
+        <p>A simple, glassmorphism-inspired notes application.</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import Dexie from 'https://cdn.jsdelivr.net/npm/dexie@3.2.3/dist/dexie.mjs'
+    
+    const db = new Dexie('NotesAppDB')
+    db.version(1).stores({ notes: 'id,title,updated_at,created_at,favorite' })
+
+    document.getElementById('btn-back').addEventListener('click', () => {
+      window.location.href = 'editor.html'
+    })
+
+    document.getElementById('btn-logout').addEventListener('click', () => {
+      if(confirm('Are you sure you want to logout?')) {
+        window.location.href = 'index.html'
+      }
+    })
+
+    // Theme Toggle (Mock)
+    const themeToggle = document.getElementById('toggle-theme')
+    themeToggle.addEventListener('change', (e) => {
+      if(!e.target.checked) {
+         alert('Light mode is coming soon!')
+         e.target.checked = true
+      }
+    })
+
+    // Tooltip Toggle Logic
+    const tooltipToggle = document.getElementById('toggle-tooltips');
+    const showTooltips = localStorage.getItem('showTooltips') !== 'false'; // Default to true
+    
+    if (tooltipToggle) {
+        tooltipToggle.checked = showTooltips;
+        tooltipToggle.addEventListener('change', (e) => {
+            localStorage.setItem('showTooltips', e.target.checked);
+        });
+    }
+
+    // Delete All Data
+    document.getElementById('btn-delete-all').addEventListener('click', async () => {
+      if(confirm('Are you sure you want to delete ALL notes? This cannot be undone.')) {
+        try {
+            await db.delete()
+            await db.open()
+            alert('All data cleared.')
+            window.location.reload()
+        } catch(e) {
+            console.error(e)
+            alert('Error clearing data')
+        }
+      }
+    })
+    
+    // Export All
+    document.getElementById('btn-export-all').addEventListener('click', async () => {
+        const notes = await db.notes.toArray()
+        const blob = new Blob([JSON.stringify(notes, null, 2)], {type : 'application/json'})
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `notefy-backup-${new Date().toISOString().slice(0,10)}.json`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+    })
+  </script>
+</body>
+</html>

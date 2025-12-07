@@ -6,8 +6,20 @@ db.version(1).stores({
   attachments: 'id,note_id,filename',
   mru: 'id,ref'
 })
+db.version(2).stores({
+  attachments: 'id,note_id,filename,data'
+})
 
 export async function initDB(){ return db.open() }
+
+export async function saveAttachment(attachment) {
+  await db.attachments.put(attachment)
+  return attachment
+}
+
+export async function getAttachment(id) {
+  return db.attachments.get(id)
+}
 
 export async function saveNote(note) {
   note.updated_at = new Date().toISOString()

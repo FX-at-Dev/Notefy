@@ -376,6 +376,17 @@ input,select,textarea{padding:10px;border-radius:8px;border:1px solid rgba(255,2
 
 .mobile-tab { display: none; }
 
+/* Overlay when sidebar is open */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 900;
+  backdrop-filter: blur(2px);
+}
+.sidebar-overlay.show { display: block; }
+
 /* --- Responsive Design --- */
 @media (max-width: 900px) {
   .workspace {
@@ -434,17 +445,6 @@ input,select,textarea{padding:10px;border-radius:8px;border:1px solid rgba(255,2
   }
 
   .sidebar.open { transform: translateX(0); }
-  
-  /* Overlay when sidebar is open */
-  .sidebar-overlay {
-    display: none;
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 900;
-    backdrop-filter: blur(2px);
-  }
-  .sidebar-overlay.show { display: block; }
 }
 
 @media (max-width: 600px) {
@@ -452,3 +452,102 @@ input,select,textarea{padding:10px;border-radius:8px;border:1px solid rgba(255,2
   .pane { min-height: 300px; }
   .topbar .center { display: none; } /* Save space */
 }
+
+/* --- Extracted from editor.html --- */
+.cm-editor { height:100%; min-height:320px; }
+.draw-canvas { width:800px; height:500px; background:#fff; border-radius:8px; }
+/* ensure fallback textarea looks integrated */
+#editor-fallback { width:100%; height:100%; min-height:320px; resize:none; background:transparent; color:inherit; border:1px solid rgba(255,255,255,0.06); padding:12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+/* simple modal inner styling for iframe import */
+#import-iframe-modal .import-iframe-inner { padding: 12px; background: var(--panel-bg, #0f0f10); border-radius: 10px; box-shadow: 0 6px 30px rgba(0,0,0,0.45); }
+.modal.hidden { display: none; }
+
+/* Dropdown Menu */
+.dropdown { position: relative; display: inline-block; }
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #1e1e24;
+  min-width: 200px;
+  box-shadow: 0px 8px 24px 0px rgba(0,0,0,0.6);
+  z-index: 9999;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.15);
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  padding: 6px;
+  backdrop-filter: blur(10px);
+}
+/* Invisible bridge to prevent menu closing when moving mouse across the gap */
+.dropdown-content::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  background: transparent;
+}
+
+.dropdown-content button {
+  color: var(--text-main);
+  padding: 10px 12px;
+  text-decoration: none;
+  display: block;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-size: 13px;
+  border-radius: 6px;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dropdown-content button:hover { background-color: rgba(255,255,255,0.1); }
+.dropdown:hover .dropdown-content { display: block; animation: fadeIn 0.2s ease; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Settings Animation */
+@keyframes float-spin {
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-5px) rotate(180deg); }
+  100% { transform: translateY(0) rotate(360deg); }
+}
+#btn-settings:hover svg {
+  animation: float-spin 4s linear infinite;
+}
+
+/* Tooltip Styles */
+.icon-btn { position: relative; }
+.show-tooltips .icon-btn[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10001;
+  margin-top: 8px;
+  opacity: 0;
+  animation: tooltipFade 0.2s forwards;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+@keyframes tooltipFade { 
+  from { opacity: 0; transform: translate(-50%, -5px); }
+  to { opacity: 1; transform: translate(-50%, 0); } 
+}
+
