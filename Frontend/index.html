@@ -3,57 +3,174 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Notefy - Web-Based Notes Making and Sharing Applicationn</title>
-  <link rel="stylesheet" href="./css/style.css" />
+  <title>Notefy - The Future of Note-Taking</title>
+  <link rel="stylesheet" href="./css/landing.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
-  <main class="centered">
-    <div class="card auth-card">
-      <h1>Notefy</h1>
-      <p>Sign in to continue</p>
+  <div id="stars-container"></div>
 
-      <form id="login-form" class="form">
-        <input id="email" type="email" placeholder="Email" required />
-        <input id="password" type="password" placeholder="Password" required />
-        <div class="row">
-          <button type="submit" class="btn">Sign in</button>
-          <a href="./editor.html" class="btn ghost">Continue offline</a>
-        </div>
-      </form>
-
-      <hr />
-      <button id="google-signin" class="btn google">Sign in with Google</button>
+  <nav>
+    <a href="#" class="logo">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#915EFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+      Notefy
+    </a>
+    <div class="nav-buttons">
+      <a href="./login.html" class="btn btn-login">Log In</a>
+      <a href="./login.html" class="btn btn-signup">New User</a>
     </div>
-  </main>
+  </nav>
 
-  <script type="module">
-    import { $ } from './js/app.js'
-    const API = 'http://localhost:4000'
-    document.addEventListener('DOMContentLoaded', () => {
-      const loginForm = $('#login-form')
-      loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault()
-        const email = $('#email').value
-        const password = $('#password').value
-        try {
-          const res = await fetch(API + '/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-          })
-          const data = await res.json()
-          if (res.ok && data.token) {
-            localStorage.setItem('auth_token', data.token)
-            window.location.href = './editor.html'
-          } else alert(data.error || 'Invalid credentials')
-        } catch (err) {
-          alert('Server not reachable: ' + err.message)
-        }
-      })
-      $('#google-signin').addEventListener('click', () => {
-        window.location.href = API + '/api/auth/google'
-      })
-    })
-  </script>
+  <header class="hero">
+    <div class="hero-content">
+      <h1>Hi, I'm <span style="color:#915EFF">Notefy</span></h1>
+      <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem;">
+        I help you <span id="typed-text" style="color:#915EFF"></span><span class="typed-cursor">|</span>
+      </h2>
+      <p>
+        A seamless, local-first workspace to combine text, drawings, and documents.
+        Stop fighting with your tools and start thinking.
+      </p>
+      <a href="./login.html" class="btn btn-signup" style="padding: 1rem 2rem; font-size: 1.1rem;">Get Started</a>
+    </div>
+    <div id="hero-3d" class="hero-3d"></div>
+  </header>
+
+  <section class="section problem-section">
+    <p class="section-subtitle">Overview</p>
+    <h2 class="section-title">Why Notefy?</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>🚀 Blazing Fast</h3>
+        <p>Built for speed. No loading spinners, no waiting. Your thoughts captured instantly.</p>
+      </div>
+      <div class="card">
+        <h3>🔒 Privacy First</h3>
+        <p>Your data stays yours. Local-first architecture with optional encrypted cloud sync.</p>
+      </div>
+      <div class="card">
+        <h3>🎨 Creative Freedom</h3>
+        <p>Mix markdown, sketches, and diagrams on an infinite canvas. Don't let tools limit your ideas.</p>
+      </div>
+      <div class="card">
+        <h3>🔄 Universal Sync</h3>
+        <p>Seamlessly sync across all your devices. Start on mobile, finish on desktop.</p>
+      </div>
+      <div class="card">
+        <h3>⚡ Offline First</h3>
+        <p>No internet? No problem. Access and edit your notes anywhere, anytime. We sync when you're back online.</p>
+      </div>
+      <div class="card">
+        <h3>🧩 Fully Extensible</h3>
+        <p>Tailor your experience with plugins and themes. Build the tool that fits your mind, not the other way around.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section deep-dive-section">
+    <p class="section-subtitle">Capabilities</p>
+    <h2 class="section-title" style="text-align: center; margin-bottom: 4rem;">Unleash Your Potential</h2>
+
+    <div class="feature-row">
+      <div class="feature-text">
+        <h2>Connect the Dots</h2>
+        <p>Your ideas don't exist in a vacuum. Link notes together to build a personal knowledge web. Discover hidden connections and let your second brain do the heavy lifting.</p>
+      </div>
+      <div class="feature-visual">
+        <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#915EFF" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><line x1="20" y1="4" x2="8.12" y2="15.88"></line><line x1="14.47" y1="14.48" x2="20" y2="20"></line><line x1="8.12" y1="8.12" x2="12" y2="12"></line><line x1="20" y1="4" x2="20" y2="20"></line><circle cx="18" cy="12" r="3"></circle></svg>
+      </div>
+    </div>
+
+    <div class="feature-row reverse">
+      <div class="feature-text">
+        <h2>Think Outside the Box</h2>
+        <p>Linear documents are so 1990. Our infinite canvas lets you mix markdown, hand-drawn sketches, and floating images. Map out complex projects or just doodle while you think.</p>
+      </div>
+      <div class="feature-visual">
+        <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#915EFF" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+      </div>
+    </div>
+
+    <div class="feature-row">
+      <div class="feature-text">
+        <h2>Your Data, Your Rules</h2>
+        <p>Cloud-first apps hold your data hostage. Notefy saves everything locally in open formats. Sync if you want, but you never have to. You own your digital legacy.</p>
+      </div>
+      <div class="feature-visual">
+        <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#915EFF" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+      </div>
+    </div>
+  </section>
+
+  <section class="section experience-section">
+    <p class="section-subtitle">Workflow</p>
+    <h2 class="section-title">How It Works</h2>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-point"></div>
+        <div class="timeline-content">
+          <h3>1. Import Content</h3>
+          <p>Drag & drop PDFs, PPTs, or images. Our OCR engine extracts text and makes it editable instantly.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-point"></div>
+        <div class="timeline-content">
+          <h3>2. Edit & Enhance</h3>
+          <p>Use our rich text editor with markdown support. Add sketches and diagrams with the integrated drawing tool.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-point"></div>
+        <div class="timeline-content">
+          <h3>3. Organize</h3>
+          <p>Tag, categorize, and link notes together. Build your personal knowledge graph effortlessly.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-point"></div>
+        <div class="timeline-content">
+          <h3>4. Export</h3>
+          <p>Generate professional reports in PDF, Word, or Markdown formats. Share your work with the world.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section use-cases-section">
+    <p class="section-subtitle">Community</p>
+    <h2 class="section-title">Built for Everyone</h2>
+    <div class="use-cases-grid">
+      <div class="use-case-card">
+        <div class="icon">👨‍💻</div>
+        <h3>Developers</h3>
+        <p>Store code snippets, diagram architecture, and document APIs. Syntax highlighting included.</p>
+      </div>
+      <div class="use-case-card">
+        <div class="icon">🎓</div>
+        <h3>Students</h3>
+        <p>Annotate PDFs, record lectures, and link concepts together. Ace your exams with active recall.</p>
+      </div>
+      <div class="use-case-card">
+        <div class="icon">✍️</div>
+        <h3>Writers</h3>
+        <p>Distraction-free mode for deep work. Link characters, plot points, and research in one place.</p>
+      </div>
+      <div class="use-case-card">
+        <div class="icon">🎨</div>
+        <h3>Designers</h3>
+        <p>Moodboards, sketches, and design systems. The infinite canvas is your playground.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section">
+    <h2>Ready to upgrade your mind?</h2>
+    <a href="./login.html" class="btn btn-signup" style="padding: 1rem 2.5rem; font-size: 1.2rem;">Join Notefy Now</a>
+  </section>
+
+  <script type="module" src="./js/landing.js"></script>
 </body>
 </html>
