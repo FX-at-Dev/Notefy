@@ -1,8 +1,10 @@
 // backend/server.js
+import 'dotenv/config'
 import Fastify from 'fastify' 
 import cors from '@fastify/cors'
 import multipart from '@fastify/multipart'
 import jwt from '@fastify/jwt'
+import oauthPlugin from '@fastify/oauth2'
 import fastifyStatic from '@fastify/static'
 import { Queue } from 'bullmq'
 import IORedis from 'ioredis'
@@ -10,20 +12,20 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 import { fileURLToPath } from 'url'
+import connectDB from './config/db.js'
+import authRoutes from './routes/authRoutes.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const fastify = Fastify({ logger: true })
+connectDB()
+
 const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379'
 const connection = new IORedis(REDIS_URL, {
   maxRetriesPerRequest: null,
   enableReadyCheck: false
 })
-
-// simple in-memory user store for demo (replace with Postgres)
-const users = new Map()
-users.set('demo@local', { id: 'u1', email: 'demo@local', password: 'demo123' })
 
 fastify.register(cors, { origin: true })
 fastify.register(multipart)
@@ -38,23 +40,24 @@ fastify.register(fastifyStatic, {
 // BullMQ queue
 const importQueue = new Queue('importQueue', { connection })
 
-// auth routes
-fastify.post('/api/auth/login', async (req, reply) => {
-  const { email, password } = req.body
-  const user = users.get(email)
-  if (!user || user.password !== password) {
-    return reply.code(401).send({ error: 'invalid credentials' })
-  }
-  const token = fastify.jwt.sign({ id: user.id, email: user.email })
-  return { token }
+// Register Routes
+fastify.register(authRoutes, { prefix: '/api/auth' })
+
+// Google OAuth Configuration
+fastify.register(oauthPlugin, {
+  name: 'googleOAuth2',
+  scope: ['profile', 'email'],
+  credentials: {
+    client: {
+      id: process.env.GOOGLE_CLIENT_ID || 'CLIENT_ID_PLACEHOLDER',
+      secret: process.env.GOOGLE_CLIENT_SECRET || 'CLIENT_SECRET_PLACEHOLDER'
+    },
+    auth: oauthPlugin.GOOGLE_CONFIGURATION
+  },
+  startRedirectPath: '/api/auth/google',
+  callbackUri: 'http://localhost:4000/api/auth/google/callback'
 })
 
-// Google OAuth redirect to Google (basic stub)
-// In production, redirect user to Google OAuth consent screen
-fastify.get('/api/auth/google', async (req, reply) => {
-  // Ideally start OAuth flow; for now redirect to demo editor
-  return reply.redirect('/editor.html')
-})
 
 // notes stub
 fastify.get('/api/notes', async (req, reply) => {

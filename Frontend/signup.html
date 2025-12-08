@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Notefy - Sign Up</title>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <main class="centered">
+    <div class="card auth-card">
+      <h1>Notefy</h1>
+      <p>Create your account</p>
+
+      <form id="signup-form" class="form">
+        <input id="name" type="text" placeholder="Full Name" required />
+        <input id="email" type="email" placeholder="Email" required />
+        <input id="password" type="password" placeholder="Password" required />
+        <input id="confirm-password" type="password" placeholder="Confirm Password" required />
+        
+        <button type="submit" class="btn" style="margin-top: 1rem;">Sign Up</button>
+      </form>
+
+      <div style="margin-top: 1.5rem;">
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Already have an account?</p>
+        <a href="./login.html" class="btn ghost" style="display: inline-block; margin-top: 0.5rem;">Sign In</a>
+      </div>
+
+      <hr style="margin: 1.5rem 0; border-color: var(--glass-border);" />
+      <button id="google-signin" class="btn google">Sign up with Google</button>
+    </div>
+  </main>
+
+  <script type="module">
+    import { $ } from './js/app.js'
+    const API = 'http://localhost:4000'
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      const signupForm = $('#signup-form')
+      
+      signupForm.addEventListener('submit', async (e) => {
+        e.preventDefault()
+        const name = $('#name').value
+        const email = $('#email').value
+        const password = $('#password').value
+        const confirmPassword = $('#confirm-password').value
+
+        if (password !== confirmPassword) {
+          alert("Passwords do not match!")
+          return
+        }
+
+        try {
+          // Note: This endpoint might not exist yet, but this is the standard pattern
+          const res = await fetch(API + '/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password })
+          })
+          
+          const data = await res.json()
+          
+          if (res.ok && data.token) {
+            localStorage.setItem('auth_token', data.token)
+            window.location.href = './editor.html'
+          } else {
+            alert(data.error || 'Registration failed')
+          }
+        } catch (err) {
+          alert('Server not reachable: ' + err.message)
+        }
+      })
+
+      $('#google-signin').addEventListener('click', () => {
+        window.location.href = API + '/api/auth/google'
+      })
+    })
+  </script>
+</body>
+</html>

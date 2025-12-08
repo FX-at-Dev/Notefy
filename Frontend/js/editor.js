@@ -1,3 +1,12 @@
+    // Check for token in URL (from Google Auth redirect)
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    if (token) {
+      localStorage.setItem('auth_token', token);
+      // Remove token from URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     import Dexie from 'https://cdn.jsdelivr.net/npm/dexie@3.2.3/dist/dexie.mjs'
     import 'https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js'
     const md = new window.markdownit({
